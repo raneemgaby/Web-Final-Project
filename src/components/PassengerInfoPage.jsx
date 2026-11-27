@@ -59,191 +59,259 @@ function fromDateInputValue(date) {
 }
 
 //automatically fills the signed-in user's information for passenger 1
-export function PassengerInfoPage({signedInUser,initialPassengers=[]}){
-    const[passengers, setPassengers]=useState(initialPassengers);
-    const[isAccountHolder, setIsAccountHolder]=useState(null);
-
-    function handlePassengerChange(index,updatedPassenger){
-        setPassengers((previous) =>
-            previous.map((passenger,passengerIndex)=>
-                passengerIndex===index?updatedPassenger:passenger
-            )
-        );
+export function PassengerInfoPage({signedInUser,initialPassengers = [],onContinue}){
+    const [passengers, setPassengers]=useState(initialPassengers);
+    const [isAccountHolder, setIsAccountHolder]=useState(null);
+    // Updates the information of an individual passenger
+    function handlePassengerChange(index, updatedPassenger) {
+        setPassengers((previous)=> previous.map((passenger,passengerIndex)=> passengerIndex===index? updatedPassenger: passenger));
     }
-
+    // Handles the Yes/No account holder question
     function handleAccountHolderChange(useAccount){
         if (!signedInUser || useAccount === isAccountHolder) {
             return;
-        }    
+        }
         setIsAccountHolder(useAccount);
+
+        // Autofill only when the user clicks Yes
         if (useAccount && signedInUser) {
             setPassengers((previous) =>
-                previous.map((passenger,index)=>
-                    index === 0?{
-                        ...passenger,
-                        title: signedInUser.title ?? passenger.title,
-                        Gender: signedInUser.Gender ?? signedInUser.gender ?? passenger.Gender,
-                        FirstName: signedInUser.FirstName ?? signedInUser.firstName ?? passenger.FirstName,
-                        lastName: signedInUser.lastName ?? signedInUser.LastName ?? passenger.lastName,
-                        DateOfBirth: signedInUser.DateOfBirth ?? signedInUser.dateOfBirth ?? passenger.DateOfBirth,
-                        Nationality: signedInUser.Nationality ?? signedInUser.nationality ?? passenger.Nationality,
-                        passportNumber: signedInUser.passportNumber ?? passenger.passportNumber,
-                        PassengerExpireDate: signedInUser.PassengerExpireDate ?? signedInUser.passportExpiryDate ?? passenger.PassengerExpireDate,
-                        email: signedInUser.email ?? passenger.email,
-                        phone: signedInUser.phone ?? passenger.phone,
-                    }:passenger
+                previous.map((passenger, index) =>
+                    index === 0
+                        ? {
+                            ...passenger,
+
+                            title:signedInUser.title?? "",
+
+                            Gender:signedInUser.Gender?? signedInUser.gender ?? "",
+
+                            FirstName:signedInUser.FirstName?? signedInUser.firstName ?? "",
+
+                            lastName:signedInUser.lastName?? signedInUser.LastName ?? "",
+
+                            DateOfBirth:signedInUser.DateOfBirth?? signedInUser.dateOfBirth ?? "",
+
+                            Nationality:signedInUser.Nationality?? signedInUser.nationality ?? "",
+
+                            passportNumber:signedInUser.passportNumber ?? "",
+
+                            PassengerExpireDate:signedInUser.PassengerExpireDate?? signedInUser.passportExpiryDate ?? "",
+
+                            email:signedInUser.email ?? "",
+
+                            phone:signedInUser.phone ?? ""
+                        }:passenger
                 )
             );
-        } else if(!useAccount){
+        }
+
+        // Clear autofilled information when switching from Yes to No
+        else if (!useAccount && isAccountHolder === true) {
             setPassengers((previous) =>
-                previous.map((passenger,index) =>
-                    index === 0?{
-                        ...passenger,
-                        title: "",
-                        Gender: "",
-                        FirstName: "",
-                        lastName: "",
-                        DateOfBirth: "",
-                        Nationality: "",
-                        passportNumber: "",
-                        PassengerExpireDate: "",
-                        email: "",
-                        phone: "",
-                    }:passenger
+                previous.map((passenger, index)=> index===0 ? {
+                            ...passenger,
+                            title: "",
+                            Gender: "",
+                            FirstName: "",
+                            lastName: "",
+                            DateOfBirth: "",
+                            Nationality: "",
+                            passportNumber: "",
+                            PassengerExpireDate: "",
+                            email: "",
+                            phone: ""
+                        }
+                        : passenger
                 )
             );
         }
     }
+    // Validates an individual passenger's information
+    function isPassengerValid(passenger) {
+        const requiredFields = ["title","Gender","FirstName","lastName","DateOfBirth","Nationality","passportNumber","PassengerExpireDate","email","phone"];
+        
+        // Check that all mandatory fields are filled
+        const allFieldsFilled= requiredFields.every( (field)=> typeof passenger[field]==="string" && passenger[field].trim()!=="");
+        if (!allFieldsFilled) {return false;}
+
+        const namePattern = /^[\p{L}\p{M}]+(?:[ .’'-][\p{L}\p{M}]+)*$/u;
+        const validFirstName= namePattern.test(passenger.FirstName.trim());
+        const validLastName= namePattern.test(passenger.lastName.trim());
+        const validTitle= ["Mr", "Mrs", "Ms", "Miss"].includes(passenger.title);
+        const validGender= ["Male","Female"].includes(passenger.Gender);
+        const validNationality= namePattern.test(passenger.Nationality.trim());
+        const validEmail= /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(passenger.email.trim());
+        const phoneDigits= passenger.phone.replace(/\D/g, "");
+        const validPhone= /^\+?[\d\s()-]+$/.test(passenger.phone) && phoneDigits.length>=7 && phoneDigits.length<=15;
+        const validDateOfBirth= toDateInputValue(passenger.DateOfBirth)!=="" && getPassengerIdentityType(passenger.DateOfBirth)!=="Unknown";
+        const validPassportNumber= /^[A-Za-z0-9]{5,20}$/.test(passenger.passportNumber.trim());
+        const expiryDate= toDateInputValue(passenger.PassengerExpireDate);
+        const today = new Date();
+        const todayDate= `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        const validPassportExpiry= expiryDate!=="" && expiryDate>=todayDate;
+        return (validTitle &&validGender &&validFirstName &&validLastName &&validNationality &&validEmail &&validPhone &&validDateOfBirth &&validPassportNumber &&validPassportExpiry);
+    }
+
+
+    // Check whether the account holder question has been answered
+    const accountQuestionAnswered= !signedInUser || isAccountHolder!==null;
+
+    // Check whether every passenger has valid information
+    const isFormValid= passengers.length>0 && accountQuestionAnswered && passengers.every(isPassengerValid);
+
+    // Handles the Continue button
+    function handleContinue(event) {
+        event.preventDefault();
+        if (!isFormValid) {
+            return;
+        }
+        if (typeof onContinue === "function") {
+            onContinue(passengers);
+        } else {
+            alert("Passenger information completed successfully.");
+        }
+    }
     return (
-    <main className="passenger-info-page">
-        <AccountHeader signedInUser={signedInUser} />
-        <BookingNavigation activePage="passenger-info" />
-        <div className="passenger-list">
-            {passengers.map((passenger, index) => (
-                <PassengerCard
-                    key={passenger.id ?? index}
-                    passenger={passenger}
-                    signedInUser={signedInUser}
-                    isAccountHolder={index === 0 ? isAccountHolder : false}
-                    onAccountHolderChange={index === 0?handleAccountHolderChange:()=>{}}
-                    onPassengerChange={(updatedPassenger) =>handlePassengerChange(index, updatedPassenger)}
-                    passengerNumber={index + 1}
-                />
-            ))}
-        </div>
-    </main>
-);
+        <main className="passenger-info-page">
+            <AccountHeader signedInUser={signedInUser} />
+            <BookingNavigation activePage="passenger-info" />
+            <form className="passenger-list" onSubmit={handleContinue}>
+                {passengers.map((passenger, index) => (
+                    <PassengerCard
+                        key={passenger.id ?? index}
+                        passenger={passenger}
+                        signedInUser={signedInUser}
+                        isAccountHolder={index===0? isAccountHolder: false}
+                        onAccountHolderChange={index===0? handleAccountHolderChange: ()=>{} }
+                        onPassengerChange={(updatedPassenger)=> handlePassengerChange(index,updatedPassenger)}
+                        passengerNumber={index + 1}
+                    />
+                ))}
+                {!accountQuestionAnswered && (
+                    <p className="validation-message"> Please answer whether the ticket is forthe signed-in account.</p> )}
+                {!isFormValid && accountQuestionAnswered && (
+                    <p className="validation-message"> Please complete all required passenger information with valid details before continuing.</p> )}
+                <button type="submit" className="continue-button" disabled={!isFormValid}>Continue</button>
+            </form>
+        </main>
+    );
 }
 
+// Displays the signed-in user's name
 function AccountHeader({ signedInUser }) {
     if (!signedInUser) {
         return null;
     }
-    const firstName=signedInUser.FirstName ?? signedInUser.firstName ?? "";
-    const lastName=signedInUser.lastName ?? signedInUser.LastName ?? "";
+    const firstName= signedInUser.FirstName ?? signedInUser.firstName??"";
+
+    const lastName= signedInUser.lastName ?? signedInUser.LastName??"";
+
     return (
         <header className="account-header">
             <div className="account-name">
-                {firstName} {lastName? `${lastName.charAt(0)}.` : ""}
+                {firstName}{" "}{lastName? `${lastName.charAt(0)}.`: ""}
             </div>
         </header>
     );
 }
 
+
+// Displays the booking progress navigation
 function BookingNavigation({ activePage }) {
-    const pages = [{id:"search-results",label:"Search Results and Filter"}, {id:"passenger-info",label:"Flight Details & Passenger info"}, {id:"booking-confirmation",label:"Booking Confirmation/E-Ticket"}, {id: "my-trips",label: "My Trips"}];
+    const pages= [{id: "search-results",label: "Search Results and Filter"},
+        {id: "passenger-info",label: "Flight Details & Passenger info"},
+        {id: "booking-confirmation",label: "Booking Confirmation/E-Ticket"},
+        {id: "my-trips",label: "My Trips"}];
+
     return (
         <nav className="booking-navigation">
             {pages.map((page) => (
-                <span key={page.id} className={ activePage === page.id ? "navigation-item active":"navigation-item"} aria-current={ activePage === page.id ? "step" : undefined}>{page.label}</span>
+                <span key={page.id} className={activePage === page.id? "navigation-item active": "navigation-item"} aria-current={activePage === page.id? "step": undefined}>
+                    {page.label}
+                </span>
             ))}
         </nav>
     );
 }
-//aria-current tells assistive technologies—especially screen readers—which item represents the current location or step.
 
-//don't allow the user to continue till he enter all the required the info fields
-//.trim() prevents users from entering only spaces to bypass validation
-function isPassengerValid(passenger) {
-    const requiredFields = ["title","Gender","FirstName","lastName","DateOfBirth","Nationality","passportNumber","PassengerExpireDate","email","phone"];
-    return requiredFields.every((field) => typeof passenger[field] === "string" && passenger[field].trim() !== "");
-}
-const isFormValid= passengers.length > 0 && passengers.every(isPassengerValid);
-
-//Renders one passenger's editable details and sends changes to the parent
+// Displays and updates an individual passenger's form
 function PassengerCard({passenger,onPassengerChange,isAccountHolder,onAccountHolderChange,passengerNumber,signedInUser}){
-    const updatePassengerField=(name,value)=>{
-        onPassengerChange({...passenger,[name]:value });
-    };
-    const handleChange=(event)=>{
-        updatePassengerField(event.target.name,event.target.value);
-    };
-    const handleCalendarChange=(fieldName,event)=>{
-        updatePassengerField(fieldName,fromDateInputValue(event.target.value));
-    };
+    const updatePassengerField= (name,value)=> { onPassengerChange({...passenger,[name]:value}); };
+    const handleChange= (event)=> { updatePassengerField(event.target.name,event.target.value); };
+    const handleCalendarChange= (fieldName,event) => { updatePassengerField(fieldName,fromDateInputValue(event.target.value)); };
+    const today = new Date();
+    const todayDate=`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     return (
-        <section>
-            <h2>
-                Passenger {passengerNumber}.{getPassengerIdentityType(passenger.DateOfBirth)}
-            </h2>
-            {passengerNumber===1 && signedInUser &&(
-            <> 
-            <fieldset>
-                <legend> Is this ticket for the signed-in account name({signedInUser.FirstName ?? signedInUser.firstName}{" "}{signedInUser.lastName ?? signedInUser.LastName})?</legend>
-                <button type="button" aria-pressed={isAccountHolder === true} onClick={() => onAccountHolderChange(true)}> Yes </button>
-                <button type="button" aria-pressed={isAccountHolder === false} onClick={() => onAccountHolderChange(false)}> No </button>
-            </fieldset>
-            {isAccountHolder && (<p>Your account details were filled in automatically.</p>)}
-            </>)}
-            
+        <section className="passenger-card">
+            <h2>Passenger {passengerNumber}.{" "} {passenger.passengerType?? getPassengerIdentityType(passenger.DateOfBirth)}</h2>
+            {passengerNumber===1 && signedInUser && (
+                <>
+                    <fieldset>
+                        <legend>Is this ticket for the signed-in account name( {signedInUser.FirstName?? signedInUser.firstName}{" "}{signedInUser.lastName?? signedInUser.LastName} )?</legend>
+                        <button type="button" aria-pressed={isAccountHolder === true} onClick={()=> onAccountHolderChange(true)}>Yes</button>
+                        <button type="button" aria-pressed={isAccountHolder === false}onClick={()=> onAccountHolderChange(false)}>No</button>
+                    </fieldset>
+                    {isAccountHolder===true && (<p className="autofill-message">Available account details were filled in automatically. Please complete any missing information.</p>)}
+                </>
+            )}
             <label>
                 Title
-                <input name="title" value={passenger.title ?? ""} onChange={handleChange}/>
+                <select name="title" value={passenger.title ?? ""} onChange={handleChange} required>
+                    <option value="">Select title</option>
+                    <option value="Mr">Mr</option>
+                    <option value="Mrs">Mrs</option>
+                    <option value="Ms">Ms</option>
+                    <option value="Miss">Miss</option>
+                    <option value="Dr">Dr</option>
+                </select>
             </label>
-
             <label>
                 Gender
-                <input name="Gender" value={passenger.Gender ?? ""} onChange={handleChange}/>
+                <select name="Gender" value={passenger.Gender ?? ""} onChange={handleChange} required>
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
             </label>
 
             <label>
                 First name
-                <input name="FirstName" value={passenger.FirstName ?? ""} onChange={handleChange}/>
+                <input name="FirstName" value={passenger.FirstName ?? ""} onChange={handleChange}required/>
             </label>
 
             <label>
                 Last name
-                <input name="lastName" value={passenger.lastName ?? ""} onChange={handleChange}/>
+                <input name="lastName" value={passenger.lastName ?? ""} onChange={handleChange}required/>
             </label>
 
-            <label>
-                Date of birth
-                <input type="date" value={toDateInputValue(passenger.DateOfBirth)} onChange={(event) => handleCalendarChange("DateOfBirth", event)}/>
+            <label>Date of birth
+                <input type="date" value={toDateInputValue(passenger.DateOfBirth)} max={todayDate} onChange={(event)=> handleCalendarChange("DateOfBirth", event)}required/>
             </label>
 
             <label>
                 Nationality
-                <input name="Nationality" value={passenger.Nationality ?? ""} onChange={handleChange} />
+                <input name="Nationality" value={passenger.Nationality ?? ""} onChange={handleChange}required/>
             </label>
 
             <label>
                 Passport number
-                <input name="passportNumber" value={passenger.passportNumber ?? ""} onChange={handleChange} />
+                <input name="passportNumber" value={passenger.passportNumber ?? ""} onChange={handleChange} minLength={5} maxLength={20}required/>
             </label>
 
             <label>
                 Passport expiry date
-                <input type="date" value={toDateInputValue(passenger.PassengerExpireDate)} onChange={(event) => handleCalendarChange("PassengerExpireDate", event)}/>
+                <input type="date" value={toDateInputValue(passenger.PassengerExpireDate)} min={todayDate} onChange={(event) =>handleCalendarChange("PassengerExpireDate",event)}required/>
             </label>
 
             <label>
                 Email
-                <input type="email" name="email" value={passenger.email ?? ""} onChange={handleChange} />
+                <input type="email" name="email" value={passenger.email ?? ""} onChange={handleChange} required/>
             </label>
 
             <label>
                 Phone number
-                <input type="tel" name="phone" value={passenger.phone ?? ""} onChange={handleChange} />
+                <input type="tel" name="phone" value={passenger.phone ?? ""} onChange={handleChange} required/>
             </label>
         </section>
     );

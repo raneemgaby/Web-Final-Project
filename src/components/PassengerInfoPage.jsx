@@ -60,9 +60,8 @@ function fromDateInputValue(date) {
 
 //automatically fills the signed-in user's information for passenger 1
 export function PassengerInfoPage({signedInUser,initialPassengers=[]}){
-    const [passengers, setPassengers] = useState(() =>
-    initialPassengers.map((passenger, index) =>index === 0 && signedInUser? fillAccountDetails(passenger,signedInUser):passenger));
-    const [isAccountHolder,setIsAccountHolder]=useState(Boolean(signedInUser));
+    const[passengers, setPassengers]=useState(initialPassengers);
+    const[isAccountHolder, setIsAccountHolder]=useState(null);
 
     function handlePassengerChange(index,updatedPassenger){
         setPassengers((previous) =>
@@ -72,7 +71,10 @@ export function PassengerInfoPage({signedInUser,initialPassengers=[]}){
         );
     }
 
-    function handleAccountHolderChange(useAccount) {
+    function handleAccountHolderChange(useAccount){
+        if (!signedInUser || useAccount === isAccountHolder) {
+            return;
+        }    
         setIsAccountHolder(useAccount);
         if (useAccount && signedInUser) {
             setPassengers((previous) =>
@@ -159,6 +161,14 @@ function BookingNavigation({ activePage }) {
     );
 }
 //aria-current tells assistive technologies—especially screen readers—which item represents the current location or step.
+
+//don't allow the user to continue till he enter all the required the info fields
+//.trim() prevents users from entering only spaces to bypass validation
+function isPassengerValid(passenger) {
+    const requiredFields = ["title","Gender","FirstName","lastName","DateOfBirth","Nationality","passportNumber","PassengerExpireDate","email","phone"];
+    return requiredFields.every((field) => typeof passenger[field] === "string" && passenger[field].trim() !== "");
+}
+const isFormValid= passengers.length > 0 && passengers.every(isPassengerValid);
 
 //Renders one passenger's editable details and sends changes to the parent
 function PassengerCard({passenger,onPassengerChange,isAccountHolder,onAccountHolderChange,passengerNumber,signedInUser}){

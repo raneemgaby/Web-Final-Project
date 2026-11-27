@@ -1,0 +1,15 @@
+.search-page {
+  min-height: 100vh;
+  padding: 45px 24px;
+}
+.search-container {
+  max-width: 1150px;
+  margin: 0 auto;
+}
+
+.search-container > h1 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 28px;
+  color: var(--text);
+}

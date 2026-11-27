@@ -1,12 +1,18 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import {BrowserRouter,Routes,Route,Navigate} from "react-router-dom";
 import SearchResults from "./pages/SearchResults";
+import "./styles/global.css";
+import "./styles/search.css";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route
-          path="/search-results"
+          path="/"
+          element={<Navigate to="/results" replace />}
+        />
+        <Route
+          path="/results"
           element={<SearchResults />}
         />
       </Routes>

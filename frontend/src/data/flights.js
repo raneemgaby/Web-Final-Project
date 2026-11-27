@@ -18,7 +18,24 @@ const flights = [
     },
 
     duration: 235,
-    stops: 0
+    stops: 0,
+
+    classes: {
+      economy: {
+        price: 320,
+        seats: 15
+      },
+
+      comfort: {
+        price: 890,
+        seats: 8
+      },
+
+      vip: {
+        price: 1450,
+        seats: 5
+      }
+    }
   },
 
   {
@@ -40,7 +57,23 @@ const flights = [
     },
 
     duration: 235,
-    stops: 0
+    stops: 0,
+    classes: {
+      economy: {
+        price: 355,
+        seats: 12
+      },
+
+      comfort: {
+        price: 975,
+        seats: 6
+      },
+
+      vip: {
+        price: 1620,
+        seats: 3
+      }
+    }
   },
 
   {
@@ -62,7 +95,23 @@ const flights = [
     },
 
     duration: 285,
-    stops: 1
+    stops: 1,
+    classes: {
+      economy: {
+        price: 285,
+        seats: 20
+      },
+
+      comfort: {
+        price: 760,
+        seats: 10
+      },
+
+      vip: {
+        price: 1290,
+        seats: 4
+      }
+    }
   }
 ];
 

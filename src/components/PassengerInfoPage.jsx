@@ -60,7 +60,8 @@ function fromDateInputValue(date) {
 
 //automatically fills the signed-in user's information for passenger 1
 export function PassengerInfoPage({signedInUser,initialPassengers=[]}){
-    const [passengers,setPassengers]=useState(initialPassengers);
+    const [passengers, setPassengers] = useState(() =>
+    initialPassengers.map((passenger, index) =>index === 0 && signedInUser? fillAccountDetails(passenger,signedInUser):passenger));
     const [isAccountHolder,setIsAccountHolder]=useState(Boolean(signedInUser));
 
     function handlePassengerChange(index,updatedPassenger){

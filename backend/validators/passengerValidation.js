@@ -22,7 +22,7 @@ export function validateRequiredFields(passenger){
 }
 const allowedTitles = ["Mr","Mrs","Ms","Miss","Dr"];
 const allowedGenders = ["Male","Female"];
-
+const namePattern = /^[\p{L}\p{M}]+(?:[ .’'-][\p{L}\p{M}]+)*$/u;
 export function validatePassengerValues(passenger) {
     const invalidFields = [];
     if (!allowedTitles.includes(passenger.title)) {
@@ -30,6 +30,16 @@ export function validatePassengerValues(passenger) {
     }
     if (!allowedGenders.includes(passenger.Gender)) {
         invalidFields.push("Gender");
+    }
+    if (!namePattern.test(passenger.FirstName.trim())) {
+        invalidFields.push("FirstName");
+    }
+ 
+    if (!namePattern.test(passenger.lastName.trim())) {
+        invalidFields.push("lastName");
+    }
+    if (!namePattern.test(passenger.Nationality.trim())) {
+        invalidFields.push("Nationality");
     }
     return invalidFields;
 }

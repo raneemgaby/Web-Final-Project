@@ -1,6 +1,7 @@
 import express from "express";
 import passengerRoutes from "./routes/passengerRoutes.js";
-import errorHandler from "./middleware/errorHandler.js";
+import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
+
 
 const app=express(); //create the web framework app
 const PORT=3000; //define the server's port
@@ -12,6 +13,7 @@ app.get("/",(req,res)=>{ //handling http endpoints
     res.send("Cloud Airlines backend is running!");
 });
 
+app.use(notFound);
 app.use(errorHandler);
 
 app.listen(PORT,()=>{ //start the http server

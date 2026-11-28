@@ -26,6 +26,19 @@ const namePattern = /^[\p{L}\p{M}]+(?:[ .’'-][\p{L}\p{M}]+)*$/u;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phonePattern = /^\+?[\d\s()-]+$/;
 
+function parseValidDate(dateString) {
+    const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
+    if (!datePattern.test(dateString)) {
+        return null;
+    }
+    const [day, month, year] = dateString.split("/").map(Number);
+    const date = new Date(year, month - 1, day);
+    if (date.getFullYear()!==year || date.getMonth()!==month - 1 || date.getDate()!==day){
+        return null;
+    }
+    return date;
+}
+
 export function validatePassengerValues(passenger) {
     const invalidFields = [];
     if (!allowedTitles.includes(passenger.title)) {
@@ -50,6 +63,13 @@ export function validatePassengerValues(passenger) {
     const phoneDigits = passenger.phone.replace(/\D/g, "");
     if (!phonePattern.test(passenger.phone)||phoneDigits.length < 7 ||phoneDigits.length > 15){
         invalidFields.push("phone");
+    }
+
+    const birthDate = parseValidDate(passenger.DateOfBirth);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (!birthDate || birthDate>today){
+        invalidFields.push("DateOfBirth");
     }
     return invalidFields;
 }

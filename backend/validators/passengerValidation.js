@@ -24,6 +24,7 @@ const allowedTitles = ["Mr","Mrs","Ms","Miss","Dr"];
 const allowedGenders = ["Male","Female"];
 const namePattern = /^[\p{L}\p{M}]+(?:[ .’'-][\p{L}\p{M}]+)*$/u;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phonePattern = /^\+?[\d\s()-]+$/;
 
 export function validatePassengerValues(passenger) {
     const invalidFields = [];
@@ -45,6 +46,10 @@ export function validatePassengerValues(passenger) {
     }
     if (!emailPattern.test(passenger.email.trim())) {
         invalidFields.push("email");
+    }
+    const phoneDigits = passenger.phone.replace(/\D/g, "");
+    if (!phonePattern.test(passenger.phone)||phoneDigits.length < 7 ||phoneDigits.length > 15){
+        invalidFields.push("phone");
     }
     return invalidFields;
 }

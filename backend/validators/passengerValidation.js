@@ -25,6 +25,7 @@ const allowedGenders = ["Male","Female"];
 const namePattern = /^[\p{L}\p{M}]+(?:[ .’'-][\p{L}\p{M}]+)*$/u;
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phonePattern = /^\+?[\d\s()-]+$/;
+const passportPattern = /^[A-Za-z0-9]{5,20}$/;
 
 function parseValidDate(dateString) {
     const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
@@ -70,6 +71,10 @@ export function validatePassengerValues(passenger) {
     today.setHours(0, 0, 0, 0);
     if (!birthDate || birthDate>today){
         invalidFields.push("DateOfBirth");
+    }
+
+    if (!passportPattern.test(passenger.passportNumber.trim())) {
+        invalidFields.push("passportNumber");
     }
     return invalidFields;
 }

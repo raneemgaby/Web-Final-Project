@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { submitPassengerInformation } from "../services/passengerApi.js";
+import "./PassengerInfo.css";
 
 function getPassengerIdentityType(dateOfBirth) {
     if (typeof dateOfBirth!=="string"){

@@ -1,10 +1,11 @@
 import express from "express";
 import passengerRoutes from "./routes/passengerRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
-
+import corsMiddleware from "./middleware/corsMiddleware.js";
 
 const app=express(); //create the web framework app
 const PORT=3000; //define the server's port
+app.use(corsMiddleware);
 app.use(express.json()); //JSON middleware to allow express to parse the incoming JSON request bodies
 
 app.use("/api/passengers", passengerRoutes);

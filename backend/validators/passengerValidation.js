@@ -20,3 +20,16 @@ export function validateRequiredFields(passenger){
     });
     return missingFields;
 }
+const allowedTitles = ["Mr","Mrs","Ms","Miss","Dr"];
+const allowedGenders = ["Male","Female"];
+
+export function validatePassengerValues(passenger) {
+    const invalidFields = [];
+    if (!allowedTitles.includes(passenger.title)) {
+        invalidFields.push("title");
+    }
+    if (!allowedGenders.includes(passenger.Gender)) {
+        invalidFields.push("Gender");
+    }
+    return invalidFields;
+}

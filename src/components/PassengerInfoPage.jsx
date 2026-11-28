@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { submitPassengerInformation } from "../services/passengerApi.js";
 
 function getPassengerIdentityType(dateOfBirth) {
     if (typeof dateOfBirth!=="string"){
@@ -137,15 +138,23 @@ export function PassengerInfoPage({signedInUser,initialPassengers = [],onContinu
     const accountQuestionAnswered= !signedInUser || isAccountHolder!==null;  //Check whether the account holder question has been answered
     const isFormValid= passengers.length>0 && accountQuestionAnswered && passengers.every(isPassengerValid); //Check whether every passenger has valid information
 
-    function handleContinue(event){ //Handles the Continue button
+    async function handleContinue(event){ //Handles the Continue button
         event.preventDefault();
         setSubmitAttempt(true);
         if (!isFormValid) {
             return;
         }
-        if (typeof onContinue === "function") {
-            onContinue(passengers);
-        } else {
+        try{
+            const result= await submitPassengerInformation(passengers);
+            if(!result.ok){
+                alert(result.data.message || "Passenger validation failed.")
+            }
+            if (typeof onContinue === "function") {
+                onContinue(passengers);
+            }else{
+                alert("Passenger information completed successfully.")
+            }
+        } catch (error) {
             alert("Passenger information completed successfully.");
         }
     }

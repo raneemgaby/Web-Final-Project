@@ -76,5 +76,10 @@ export function validatePassengerValues(passenger) {
     if (!passportPattern.test(passenger.passportNumber.trim())) {
         invalidFields.push("passportNumber");
     }
+
+    const expiryDate = parseValidDate(passenger.PassengerExpireDate);
+    if (!expiryDate || expiryDate<today) {
+        invalidFields.push("PassengerExpireDate");
+    }
     return invalidFields;
 }
